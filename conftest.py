@@ -5,6 +5,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.core.utils import ChromeType
 from selenium import webdriver
 from pages.login_page import LoginPage
+from pages.dynamic_loading_pages import DynamicLoadingPage
 from selenium.webdriver.remote.webdriver import WebDriver
 
 
@@ -38,6 +39,10 @@ def login(driver: WebDriver):
     login_page = LoginPage(driver)
     return login_page
 
+@pytest.fixture
+def dynamic_loading(driver: WebDriver):
+    dynamic_loading_page = DynamicLoadingPage(driver)
+    return dynamic_loading_page
 
 def pytest_addoption(parser):
     parser.addoption(
