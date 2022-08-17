@@ -35,15 +35,21 @@ class BasePage:
         self._find(locator).click()
 
     def _type(self, locator: dict, input_text: str) -> None:
-        """Clears text field then types into an element. Requires a dictionary with 
+        """Clears text field then types into an element. Requires a dictionary with
         the "by" and "value" keys and input text as string."""
         self._find(locator).clear()
         self._find(locator).send_keys(input_text)
 
-    def _is_displayed(self, locator: dict) -> None:
-        """Checks if an element is displayed. Requires a dictionary with the "by" and "value" keys."""
+    def _is_displayed(self, locator: dict, timeout: int = 10) -> None:
+        """Checks if an element is displayed. Requires a dictionary with the "by" and "value" keys.
+        Has default timeout of 10 seconds"""
         try:
-            return self._find(locator).is_displayed()
-        except NoSuchElementException: 
+            element = WebDriverWait(self.driver, timeout).until(
+                EC.visibility_of_element_located(
+                    (locator["by"], locator["value"])
+                )
+            )
+            return element.is_displayed()
+        except NoSuchElementException:
             print("Element is currently not displayed in screen.")
             return False
