@@ -1,32 +1,16 @@
 import pytest
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromiumService
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.utils import ChromeType
-from selenium.webdriver.common.by import By
 from pages.login_page import LoginPage
 
-
-@pytest.fixture
-def login(request):
-    driver_ = webdriver.Chrome(
-        service=ChromiumService(
-            ChromeDriverManager(
-                chrome_type=ChromeType.CHROMIUM)
-            .install()
-        ))
-
-    login_page = LoginPage(driver_)
-
-    def quit():
-        driver_.quit()
-
-    request.addfinalizer(quit)
-    return login_page
-
-
-def test_valid_credentials(login):
+def test_valid_credentials(login: LoginPage):
+    """Testing with valid credentials. Should show success message."""
     login.with_("tomsmith", "SuperSecretPassword!")
     assert login.success_message_present()
+@pytest.mark.parametrize("username, password", [
+    ("timsmith", "SuperSecretPassword!"),
+    ("tomsmith", "BadPassword!"),
+    ("timsmith", "BadPassword!"),
+])
+def test_with_invalid_credentials(login: LoginPage, username: str, password: str):
+    """Testing with invalid credentials. Should show failure message."""
+    login.with_(username, password)
+    assert login.failure_message_present()
