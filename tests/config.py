@@ -1,2 +1,5 @@
 base_url = ""
 browser = ""
+browserversion = ""
+platform = ""
+host = ""

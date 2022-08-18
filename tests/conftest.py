@@ -1,9 +1,11 @@
 import tests.config as config
 import logging
 import pytest
+import os
 # selenium dependencies
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromiumService
+from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.remote.webdriver import WebDriver
 # webdriver manager dependencies
@@ -26,30 +28,44 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
     config.base_url = request.config.getoption("--baseurl")
     config.browser = request.config.getoption("--browser").lower()
 
-    LOGGER.info("base url: %s", config.base_url)
+    if config.host == "saucelabs":
+        LOGGER.info(f"Running tests on Saucelabs")
+    else:
+        LOGGER.info(f"Running tests on localhost")
+        if config.browser == "chrome":
+            LOGGER.info("Running with Chrome")
+            chrome_options = webdriver.ChromeOptions()
+            if headless == True:
+                LOGGER.info("Headless mode enabled")
+                chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--start-maximized")
+            chrome_options.add_argument("--log-level=3")
+            chrome_options.add_argument("--disable-extensions")
 
-    if config.browser == "chrome":
-        chrome_options = webdriver.ChromeOptions()
-        if headless == True:
-            LOGGER.info("Headless mode enabled")
-            chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--start-maximized")
-        chrome_options.add_argument("--log-level=3")
-        chrome_options.add_argument("--disable-extensions")
+            driver_ = webdriver.Chrome(
+                service=ChromiumService(
+                    ChromeDriverManager(
+                        chrome_type=ChromeType.CHROMIUM).install()
+                ),
+                options=chrome_options)
+        elif config.browser == "firefox":
+            LOGGER.info("Running with Firefox")
+            options = FirefoxOptions()
+            if headless:
+                options.headless = True
+            driver_ = webdriver.Firefox(
+                options=options,
+                service=FirefoxService(GeckoDriverManager().install(),
+                                    log_path=os.devnull),
+            )
+            driver_.maximize_window()
 
-        driver_ = webdriver.Chrome(
-            service=ChromiumService(
-                ChromeDriverManager(
-                    chrome_type=ChromeType.CHROMIUM).install()
-            ),
-            options=chrome_options)
+        yield driver_
 
-    yield driver_
+        def quit():
+            driver_.quit()
 
-    def quit():
-        driver_.quit()
-
-    request.addfinalizer(quit)
+        request.addfinalizer(quit)
 
 
 @pytest.fixture
@@ -82,8 +98,17 @@ def pytest_addoption(parser: Parser) -> None:
                      help="browser for the test",
                      choices=("chrome", "firefox")
                      )
+    parser.addoption("--host",
+                     action="store",
+                     default="saucelabs",
+                     help="host for the test: localhost or saucelabs",
+                     choices=("localhost", "saucelabs"))
+    parser.addoption("--platform",
+                     action="store",
+                     default="Windows 10",
+                     help="OS platform for the test")
 
 
 @pytest.fixture
 def headless(request: FixtureRequest) -> bool:
-    return bool(request.config.getoption("--headless"))
+    return bool(request.config.getoption("--headless").capitalize())
