@@ -1,9 +1,13 @@
 from selenium import webdriver
+import logging
+import tests.config as config
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
+
+LOGGER = logging.getLogger(__name__)
 
 class BasePage:
 
@@ -13,7 +17,9 @@ class BasePage:
 
     def _visit(self, url: str) -> None:
         """Visit a url. Requires url to be a string."""
-        self.driver.get(url)
+        target_url = f"{config.base_url}/{url}"
+        LOGGER.info(f"Visiting {target_url}")
+        self.driver.get(f"{target_url}")
 
     def _find(self, locator: dict, timeout: int = 10) -> WebElement:
         """Find an element and give a default wait of 10 seconds.

@@ -10,7 +10,7 @@ class DynamicLoadingPage(BasePage):
 
     def __init__(self, driver: WebDriver):
         self.driver = driver
-        self._visit("http://the-internet.herokuapp.com/dynamic_loading/1")
+        self._visit("dynamic_loading/1")
         assert self._is_displayed(self._start_button)
 
     def click_start_button(self) -> None:

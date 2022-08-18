@@ -4,16 +4,23 @@ from selenium.webdriver.chrome.service import Service as ChromiumService
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.core.utils import ChromeType
 from selenium import webdriver
+from selenium.webdriver.remote.webdriver import WebDriver
 from pages.login_page import LoginPage
 from pages.dynamic_loading_pages import DynamicLoadingPage
-from selenium.webdriver.remote.webdriver import WebDriver
+import tests.config as config
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
 def driver(request, headless):
+    config.base_url = request.config.getoption("--baseurl")
+    LOGGER.info("base url: %s", config.base_url)
     chrome_options = webdriver.ChromeOptions()
     # if headless:
     if headless == "True":
+        LOGGER.info("Headless mode enabled")
         chrome_options.add_argument("--headless")
     chrome_options.add_argument("--start-maximized")
     chrome_options.add_argument("--log-level=3")
@@ -52,6 +59,10 @@ def pytest_addoption(parser):
         help="my option: type1 or type2",
         choices=("True", "False"),
     )
+    parser.addoption("--baseurl", 
+        action="store", 
+        default="http://the-internet.herokuapp.com/",
+        help="base url for the test")
 
 
 @pytest.fixture

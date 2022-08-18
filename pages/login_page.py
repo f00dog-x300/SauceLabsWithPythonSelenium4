@@ -15,7 +15,7 @@ class LoginPage(BasePage):
 
     def __init__(self, driver: WebDriver):
         self.driver = driver
-        self._visit("http://the-internet.herokuapp.com/login")
+        self._visit("login")
         assert self._is_displayed(self._login_form)
 
     def with_(self, username: str, password: str):
