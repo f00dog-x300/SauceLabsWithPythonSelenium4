@@ -1,2 +1,5 @@
 *cache*
 .vscode
+
+# for reports
+*.html

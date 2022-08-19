@@ -2,6 +2,7 @@ import tests.config as config
 import logging
 import pytest
 import os
+from datetime import datetime
 # selenium dependencies
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromiumService
@@ -138,10 +139,43 @@ def headless(request: FixtureRequest) -> bool:
 
 # reporting section
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)  # added all below
-def pytest_runtest_makereport(item, call):
-    # this sets the result as a test attribute for Sauce Labs reporting.
-    outcome = yield
-    rep = outcome.get_result()
+def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:
+    # # this sets the result as a test attribute for Sauce Labs reporting.
+    # outcome = yield
+    # rep = outcome.get_result()
 
-    # set an report attribute for each phase of a call
-    setattr(item, "rep_" + rep.when, rep)
+    # setattr(item, "rep_" + rep.when, rep)
+    pytest_html = item.config.pluginmanager.getplugin("html")
+    outcome = yield
+    report_path = "reports"
+
+    report = outcome.get_result()
+    # # set an report attribute for each phase of a call
+    setattr(item, "rep_" + report.when, report)
+
+    extra = getattr(report, "extra", [])
+    if report.when == "call":
+        feature_request = item.funcargs["request"]
+        driver = feature_request.getfixturevalue("driver")
+        nodeid = item.nodeid
+        xfail = hasattr(report, "wasxfail")
+        if (report.skipped and xfail) or (report.failed and not xfail):
+            file_name = f"{nodeid}_{datetime.today().strftime('%Y-%m-%d_%H_%M')}.png".replace(
+                "/", "_").replace("::", "_").replace(".py", "")
+            img_path = os.path.join(report_path, "screenshots", file_name)
+            driver.save_screenshot(img_path)
+            screenshot = driver.get_screenshot_as_base64()  # the hero
+            extra.append(pytest_html.extras.image(screenshot, ""))
+        report.extra = extra
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_sessionfinish(session, exitstatus):
+    session.config._metadata["project"] = "Sauce Labs Demo"
+    session.config._metadata["person running"] = os.getlogin()
+    session.config._metadata["tags"] = ["pytest", "selenium", "python"]
+    session.config._metadata["browser"] = session.config.getoption("--browser")
+    if session.config.getoption("--host") == "saucelabs":
+        session.config._metadata["host"] = "saucelabs"
+        session.config._metadata["platform"] = session.config.getoption("--platform")
+        session.config._metadata["browser version"] = session.config.getoption("--browserversion")
