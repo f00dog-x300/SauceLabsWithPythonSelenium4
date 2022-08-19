@@ -42,8 +42,9 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
         }
         _credentials = f"{os.environ['SAUCE_USERNAME']}:{os.environ['SAUCE_ACCESS_KEY']}"
         _url = f"https://{_credentials}@ondemand.saucelabs.com/wd/hub"
-        driver_ = webdriver.Remote(command_executor=_url, desired_capabilities=capabilities)
-    
+        driver_ = webdriver.Remote(
+            command_executor=_url, desired_capabilities=capabilities)
+
     else:
         LOGGER.info(f">> Running tests on localhost")
         if config.browser == "chrome":
@@ -66,6 +67,7 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
             LOGGER.info(">> Browser: Firefox")
             options = FirefoxOptions()
             if headless:
+                LOGGER.info("Headless mode enabled")
                 options.headless = True
             driver_ = webdriver.Firefox(
                 options=options,
@@ -98,16 +100,15 @@ def dynamic_loading(driver: WebDriver) -> DynamicLoadingPage:
 
 
 def pytest_addoption(parser: Parser) -> None:
-    parser.addoption(
-        "--headless",
-        action="store",
-        default=False,
-        help="my option: type1 or type2",
-        choices=("True", "False")
-    )
+    parser.addoption("--headless",
+                     action="store",
+                     default=False,
+                     help="Whether or not to run tests in headless mode",
+                     choices=("True", "False")
+                     )
     parser.addoption("--baseurl",
                      action="store",
-                     default="http://the-internet.herokuapp.com/",
+                     default="http://the-internet.herokuapp.com",
                      help="base url for the test")
     parser.addoption("--browser",
                      action="store",
@@ -115,13 +116,13 @@ def pytest_addoption(parser: Parser) -> None:
                      help="browser for the test",
                      choices=("chrome", "firefox")
                      )
-    parser.addoption("--browserversion", 
+    parser.addoption("--browserversion",
                      action="store",
                      default="latest",
                      help="browser version for the test",)
     parser.addoption("--host",
                      action="store",
-                     default="saucelabs",
+                     default="localhost",
                      help="host for the test: localhost or saucelabs",
                      choices=("localhost", "saucelabs"))
     parser.addoption("--platform",

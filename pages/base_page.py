@@ -56,6 +56,8 @@ class BasePage:
                 )
             )
             return element.is_displayed()
-        except NoSuchElementException:
-            print("Element is currently not displayed in screen.")
+        
+        except TimeoutException as e:
+            print(f"Element is currently not displayed in screen.")
+            LOGGER.error(f">> Stacktrace: \n{e}")
             return False
