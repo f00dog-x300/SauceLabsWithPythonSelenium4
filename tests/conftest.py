@@ -27,13 +27,27 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
     # configurations from CLI
     config.base_url = request.config.getoption("--baseurl")
     config.browser = request.config.getoption("--browser").lower()
+    config.host = request.config.getoption("--host").lower()
 
     if config.host == "saucelabs":
-        LOGGER.info(f"Running tests on Saucelabs")
+        LOGGER.info(f">> Running tests on Saucelabs")
+        test_name = request.node.name
+        capabilities = {
+            'browserName': config.browser,
+            'platformName': config.platform,
+            'sauce:options': {
+                "name": test_name
+            }
+
+        }
+        _credentials = f"{os.environ['SAUCE_USERNAME']}:{os.environ['SAUCE_ACCESS_KEY']}"
+        _url = f"https://{_credentials}@ondemand.saucelabs.com/wd/hub"
+        driver_ = webdriver.Remote(command_executor=_url, desired_capabilities=capabilities)
+    
     else:
-        LOGGER.info(f"Running tests on localhost")
+        LOGGER.info(f">> Running tests on localhost")
         if config.browser == "chrome":
-            LOGGER.info("Running with Chrome")
+            LOGGER.info(">> Browser: Chrome")
             chrome_options = webdriver.ChromeOptions()
             if headless == True:
                 LOGGER.info("Headless mode enabled")
@@ -49,23 +63,26 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
                 ),
                 options=chrome_options)
         elif config.browser == "firefox":
-            LOGGER.info("Running with Firefox")
+            LOGGER.info(">> Browser: Firefox")
             options = FirefoxOptions()
             if headless:
                 options.headless = True
             driver_ = webdriver.Firefox(
                 options=options,
                 service=FirefoxService(GeckoDriverManager().install(),
-                                    log_path=os.devnull),
+                                       log_path=os.devnull),
             )
             driver_.maximize_window()
 
-        yield driver_
+    yield driver_
 
-        def quit():
-            driver_.quit()
+    def quit():
+        if config.host == "saucelabs":
+            sauce_result = "failed" if request.node.rep_call.failed else "passed"  # added
+            driver_.execute_script(f"sauce:job-result={sauce_result}")
+        driver_.quit()
 
-        request.addfinalizer(quit)
+    request.addfinalizer(quit)
 
 
 @pytest.fixture
@@ -98,6 +115,10 @@ def pytest_addoption(parser: Parser) -> None:
                      help="browser for the test",
                      choices=("chrome", "firefox")
                      )
+    parser.addoption("--browserversion", 
+                     action="store",
+                     default="latest",
+                     help="browser version for the test",)
     parser.addoption("--host",
                      action="store",
                      default="saucelabs",
@@ -112,3 +133,14 @@ def pytest_addoption(parser: Parser) -> None:
 @pytest.fixture
 def headless(request: FixtureRequest) -> bool:
     return bool(request.config.getoption("--headless").capitalize())
+
+
+# reporting section
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)  # added all below
+def pytest_runtest_makereport(item, call):
+    # this sets the result as a test attribute for Sauce Labs reporting.
+    outcome = yield
+    rep = outcome.get_result()
+
+    # set an report attribute for each phase of a call
+    setattr(item, "rep_" + rep.when, rep)
