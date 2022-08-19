@@ -135,17 +135,14 @@ def pytest_addoption(parser: Parser) -> None:
 
 @pytest.fixture
 def headless(request: FixtureRequest) -> bool:
+    """CLI option to run tests in headless mode"""
     return bool(request.config.getoption("--headless").capitalize())
 
 
 # reporting section
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)  # added all below
 def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:
-    # # this sets the result as a test attribute for Sauce Labs reporting.
-    # outcome = yield
-    # rep = outcome.get_result()
-
-    # setattr(item, "rep_" + rep.when, rep)
+    """Sets the result of each test in the report."""
     pytest_html = item.config.pluginmanager.getplugin("html")
     outcome = yield
     report_path = "reports"
@@ -172,6 +169,9 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_configure(config):
+    """Configures the report name and folders before test begins. 
+    will be ignored if report name is preset in pytest.ini or through
+    cli"""
     # set custom options only if none are provided from command line
     if not config.option.htmlpath:
         now = datetime.now()
