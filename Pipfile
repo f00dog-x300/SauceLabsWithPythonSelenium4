@@ -12,7 +12,6 @@ webdriver-manager = "*"
 pytest-html = "*"
 
 [scripts]
-test = "echo 'Hello World!'"
 sauce-test = "pytest --host=saucelabs --browserversion=latest --platform='Windows 10'"
 local-test = "pytest --host=localhost"
 
