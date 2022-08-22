@@ -57,12 +57,17 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
             "browserVersion": "latest",
             "os": "Windows",
             "osVersion": "10",
-            "sessionName": "pytest-browserstack",
+            # "sessionName": "pytest-browserstack",
             "build": test_name,
+            "networkLogs": True,
 
         }
-        URL = f"https://{os.environ['BS_USERNAME']}:{os.environ['BS_ACCESS_KEY']}@hub.browserstack.com/wd/hub"
-        # options.set_capability("bstack:options", bstack_options)
+
+        username = os.environ['BS_USERNAME']
+        access_key = os.environ['BS_ACCESS_KEY']
+
+        LOGGER.info(f"bs_stackoptions: {bstack_options}")
+        URL = f"https://{username}:{access_key}@hub.browserstack.com/wd/hub"
         driver_ = webdriver.Remote(
             command_executor=URL,
             desired_capabilities=bstack_options
@@ -110,20 +115,20 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
         """Allows for the driver to be quit after the test 
         has finished. Also reports to host if pass or failed 
         test."""
+        test_result = "failed" if request.node.rep_call.failed else "passed"
         if config.host == "saucelabs":
-            sauce_result = "failed" if request.node.rep_call.failed else "passed"  # added
-            driver_.execute_script(f"sauce:job-result={sauce_result}")
+            # sauce_result = "failed" if request.node.rep_call.failed else "passed"  # added
+            driver_.execute_script(f"sauce:job-result={test_result}")
 
         if config.host == "browserstack":
-            bs_result = "failed" if request.node.rep_call.failed else "passed"  # added
-            LOGGER.info(f">> Browserstack result: {bs_result}")
-            if bs_result == "passed":
+            # bs_result = "failed" if request.node.rep_call.failed else "passed"  # added
+            LOGGER.info(f">> Browserstack result: {test_result}")
+            if test_result == "passed":
                 driver_.execute_script(
-                    "browserstack_executor: {'action': 'setSessionStatus', 'arguments': {'status':'passed', 'reason': 'All assertions valid. Passing.'}}")
-
-            elif bs_result == "failed":
+                    'browserstack_executor: {"action": "setSessionStatus", "arguments": {"status":"passed", "reason": "Assertions have been validated!"}}')
+            elif test_result == "failed":
                 driver_.execute_script(
-                    'browserstack_executor: {"action": "setSessionStatus", "arguments": {"status":"failed", "reason": "Some exception occurred"}}')
+                    'browserstack_executor: {"action": "setSessionStatus", "arguments": {"status":"failed", "reason": "An assertion has failed!"}}')
         driver_.quit()
 
     request.addfinalizer(quit)
