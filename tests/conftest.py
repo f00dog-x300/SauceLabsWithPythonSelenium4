@@ -35,9 +35,9 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
         LOGGER.info(f">> Running tests on Saucelabs")
         test_name = request.node.name
         capabilities = {
-            'browserName': config.browser,
-            'platformName': config.platform,
-            'sauce:options': {
+            "browserName": config.browser,
+            "platformName": config.platform,
+            "sauce:options": {
                 "name": test_name
             }
 
@@ -45,13 +45,41 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
         _credentials = f"{os.environ['SAUCE_USERNAME']}:{os.environ['SAUCE_ACCESS_KEY']}"
         _url = f"https://{_credentials}@ondemand.saucelabs.com/wd/hub"
         driver_ = webdriver.Remote(
-            command_executor=_url, desired_capabilities=capabilities)
+            command_executor=_url,
+            desired_capabilities=capabilities
+        )
 
-    else:
+    elif config.host == "browserstack":
+        LOGGER.info(f">> Running tests on Browserstack")
+        test_name = request.node.name
+        bstack_options = {
+            "browserName": config.browser,
+            "browserVersion": "latest",
+            "os": "Windows",
+            "osVersion": "10",
+            # "sessionName": "pytest-browserstack",
+            "build": test_name,
+            "networkLogs": True,
+
+        }
+
+        username = os.environ['BS_USERNAME']
+        access_key = os.environ['BS_ACCESS_KEY']
+
+        LOGGER.info(f"bs_stackoptions: {bstack_options}")
+        URL = f"https://{username}:{access_key}@hub.browserstack.com/wd/hub"
+        driver_ = webdriver.Remote(
+            command_executor=URL,
+            desired_capabilities=bstack_options
+        )
+
+    elif config.host == "localhost":
         LOGGER.info(f">> Running tests on localhost")
+
         if config.browser == "chrome":
             LOGGER.info(">> Browser: Chrome")
             chrome_options = webdriver.ChromeOptions()
+
             if headless == True:
                 LOGGER.info("Headless mode enabled")
                 chrome_options.add_argument("--headless")
@@ -65,12 +93,15 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
                         chrome_type=ChromeType.CHROMIUM).install()
                 ),
                 options=chrome_options)
+
         elif config.browser == "firefox":
             LOGGER.info(">> Browser: Firefox")
             options = FirefoxOptions()
+
             if headless:
                 LOGGER.info("Headless mode enabled")
                 options.headless = True
+
             driver_ = webdriver.Firefox(
                 options=options,
                 service=FirefoxService(GeckoDriverManager().install(),
@@ -80,10 +111,24 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
 
     yield driver_
 
-    def quit():
+    def quit() -> None:
+        """Allows for the driver to be quit after the test 
+        has finished. Also reports to host if pass or failed 
+        test."""
+        test_result = "failed" if request.node.rep_call.failed else "passed"
         if config.host == "saucelabs":
-            sauce_result = "failed" if request.node.rep_call.failed else "passed"  # added
-            driver_.execute_script(f"sauce:job-result={sauce_result}")
+            # sauce_result = "failed" if request.node.rep_call.failed else "passed"  # added
+            driver_.execute_script(f"sauce:job-result={test_result}")
+
+        if config.host == "browserstack":
+            # bs_result = "failed" if request.node.rep_call.failed else "passed"  # added
+            LOGGER.info(f">> Browserstack result: {test_result}")
+            if test_result == "passed":
+                driver_.execute_script(
+                    'browserstack_executor: {"action": "setSessionStatus", "arguments": {"status":"passed", "reason": "Assertions have been validated!"}}')
+            elif test_result == "failed":
+                driver_.execute_script(
+                    'browserstack_executor: {"action": "setSessionStatus", "arguments": {"status":"failed", "reason": "An assertion has failed!"}}')
         driver_.quit()
 
     request.addfinalizer(quit)
@@ -125,8 +170,8 @@ def pytest_addoption(parser: Parser) -> None:
     parser.addoption("--host",
                      action="store",
                      default="localhost",
-                     help="host for the test: localhost or saucelabs",
-                     choices=("localhost", "saucelabs"))
+                     help="host for the test: localhost, saucelabs, browserstack",
+                     choices=("localhost", "saucelabs", "browserstack"))
     parser.addoption("--platform",
                      action="store",
                      default="Windows 10",
@@ -184,13 +229,16 @@ def pytest_configure(config):
         config.option.htmlpath = report
         config.option.self_contained_html = True
 
+
 @pytest.hookimpl(tryfirst=True)
 def pytest_sessionfinish(session, exitstatus):
-    session.config._metadata["project"] = "Sauce Labs Demo"
+    session.config._metadata["project"] = "Demo"
     session.config._metadata["person running"] = os.getlogin()
     session.config._metadata["tags"] = ["pytest", "selenium", "python"]
     session.config._metadata["browser"] = session.config.getoption("--browser")
     if session.config.getoption("--host") == "saucelabs":
         session.config._metadata["host"] = "saucelabs"
-        session.config._metadata["platform"] = session.config.getoption("--platform")
-        session.config._metadata["browser version"] = session.config.getoption("--browserversion")
+        session.config._metadata["platform"] = session.config.getoption(
+            "--platform")
+        session.config._metadata["browser version"] = session.config.getoption(
+            "--browserversion")

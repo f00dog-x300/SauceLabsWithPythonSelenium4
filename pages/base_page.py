@@ -34,7 +34,7 @@ class BasePage:
             )
             return element
         except TimeoutException as e:
-            print(f"Could not find element {locator}. Stacktrace: {e}")
+            LOGGER.error(f"Could not find element {locator}. Stacktrace: {e}")
 
     def _click(self, locator: dict) -> None:
         """Clicks an element. Requires a dictionary with the "by" and "value" keys."""
@@ -57,7 +57,6 @@ class BasePage:
             )
             return element.is_displayed()
         
-        except TimeoutException as e:
-            print(f"Element is currently not displayed in screen.")
-            LOGGER.error(f">> Stacktrace: \n{e}")
+        except TimeoutException:
+            LOGGER.error(f"Element is currently not displayed in screen.")
             return False
