@@ -53,12 +53,13 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
         LOGGER.info(f">> Running tests on Browserstack")
         test_name = request.node.name
         bstack_options = {
-            "browserVersion": config.browser,
-            "os": config.platform,
+            "browserName": config.browser,
+            "browserVersion": "latest",
+            "os": "Windows",
+            "osVersion": "10",
             "sessionName": "pytest-browserstack",
             "build": test_name,
-            # "userName": os.environ['BS_USERNAME'],
-            # "accessKey": os.environ['BS_ACCESS_KEY']
+
         }
         URL = f"https://{os.environ['BS_USERNAME']}:{os.environ['BS_ACCESS_KEY']}@hub.browserstack.com/wd/hub"
         # options.set_capability("bstack:options", bstack_options)
@@ -112,17 +113,17 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
         if config.host == "saucelabs":
             sauce_result = "failed" if request.node.rep_call.failed else "passed"  # added
             driver_.execute_script(f"sauce:job-result={sauce_result}")
+
         if config.host == "browserstack":
             bs_result = "failed" if request.node.rep_call.failed else "passed"  # added
-            test_status = {
-                "action": "setSessionStatus",
-                "arguments": {
-                    "status": bs_result,
-                    "reason": "An assertion failed or an exception was thrown",
-                }
-            }
-            driver_.execute_script(
-                f"browserstack_executor: {test_status}")
+            LOGGER.info(f">> Browserstack result: {bs_result}")
+            if bs_result == "passed":
+                driver_.execute_script(
+                    "browserstack_executor: {'action': 'setSessionStatus', 'arguments': {'status':'passed', 'reason': 'All assertions valid. Passing.'}}")
+
+            elif bs_result == "failed":
+                driver_.execute_script(
+                    'browserstack_executor: {"action": "setSessionStatus", "arguments": {"status":"failed", "reason": "Some exception occurred"}}')
         driver_.quit()
 
     request.addfinalizer(quit)
@@ -226,7 +227,7 @@ def pytest_configure(config):
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_sessionfinish(session, exitstatus):
-    session.config._metadata["project"] = "Sauce Labs Demo"
+    session.config._metadata["project"] = "Demo"
     session.config._metadata["person running"] = os.getlogin()
     session.config._metadata["tags"] = ["pytest", "selenium", "python"]
     session.config._metadata["browser"] = session.config.getoption("--browser")

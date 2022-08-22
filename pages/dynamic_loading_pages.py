@@ -6,7 +6,7 @@ class DynamicLoadingPage(BasePage):
 
     _start_button = {"by": By.XPATH, "value": "//button[contains(text(), 'Start')]"}
     _loading_bar = {"by": By.ID, "value": "loading"}
-    _hello_world_text = {"by": By.ID, "value": "finish"}
+    _hello_world_text = {"by": By.ID, "value": "finishh"}
 
     def __init__(self, driver: WebDriver):
         self.driver = driver
