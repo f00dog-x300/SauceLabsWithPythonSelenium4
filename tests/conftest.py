@@ -25,12 +25,14 @@ LOGGER = logging.getLogger(__name__)
 
 @pytest.fixture
 def driver(request: FixtureRequest, headless: bool) -> WebDriver:
+    """Webdriver that initiates the browser and sets up the test environment.
+    Utilizes request pytest fixture and headless option."""
 
     # configurations from CLI
     config.base_url = request.config.getoption("--baseurl")
     config.browser = request.config.getoption("--browser").lower()
     config.host = request.config.getoption("--host").lower()
-
+    
     if config.host == "saucelabs":
         LOGGER.info(f">> Running tests on Saucelabs")
         test_name = request.node.name
@@ -115,20 +117,23 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
         """Allows for the driver to be quit after the test 
         has finished. Also reports to host if pass or failed 
         test."""
+        # TODO: explore using capsys here to capture stdout and stderr
         test_result = "failed" if request.node.rep_call.failed else "passed"
+
         if config.host == "saucelabs":
-            # sauce_result = "failed" if request.node.rep_call.failed else "passed"  # added
             driver_.execute_script(f"sauce:job-result={test_result}")
 
         if config.host == "browserstack":
-            # bs_result = "failed" if request.node.rep_call.failed else "passed"  # added
             LOGGER.info(f">> Browserstack result: {test_result}")
+
             if test_result == "passed":
                 driver_.execute_script(
                     'browserstack_executor: {"action": "setSessionStatus", "arguments": {"status":"passed", "reason": "Assertions have been validated!"}}')
+
             elif test_result == "failed":
                 driver_.execute_script(
                     'browserstack_executor: {"action": "setSessionStatus", "arguments": {"status":"failed", "reason": "An assertion has failed!"}}')
+
         driver_.quit()
 
     request.addfinalizer(quit)
@@ -136,17 +141,20 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
 
 @pytest.fixture
 def login(driver: WebDriver) -> LoginPage:
+    """Page fixture for the login page. Returns a LoginPage object."""
     login_page = LoginPage(driver)
     return login_page
 
 
 @pytest.fixture
 def dynamic_loading(driver: WebDriver) -> DynamicLoadingPage:
+    """Page fixture for the dynamic loading page. Returns a DynamicLoadingPage object."""
     dynamic_loading_page = DynamicLoadingPage(driver)
     return dynamic_loading_page
 
 
 def pytest_addoption(parser: Parser) -> None:
+    """Adds CLI options to pytest."""
     parser.addoption("--headless",
                      action="store",
                      default=False,
@@ -195,13 +203,14 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:
     report = outcome.get_result()
     # # set an report attribute for each phase of a call
     setattr(item, "rep_" + report.when, report)
-
     extra = getattr(report, "extra", [])
+
     if report.when == "call":
         feature_request = item.funcargs["request"]
         driver = feature_request.getfixturevalue("driver")
         nodeid = item.nodeid
         xfail = hasattr(report, "wasxfail")
+
         if (report.skipped and xfail) or (report.failed and not xfail):
             file_name = f"{nodeid}_{datetime.today().strftime('%Y-%m-%d_%H_%M')}.png".replace(
                 "/", "_").replace("::", "_").replace(".py", "")
@@ -216,7 +225,7 @@ def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:
 def pytest_configure(config):
     """Configures the report name and folders before test begins. 
     will be ignored if report name is preset in pytest.ini or through
-    cli"""
+    CLI."""
     # set custom options only if none are provided from command line
     if not config.option.htmlpath:
         now = datetime.now()
@@ -232,10 +241,12 @@ def pytest_configure(config):
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_sessionfinish(session, exitstatus):
+    """Adds metadata to the HTML report."""
     session.config._metadata["project"] = "Demo"
     session.config._metadata["person running"] = os.getlogin()
     session.config._metadata["tags"] = ["pytest", "selenium", "python"]
     session.config._metadata["browser"] = session.config.getoption("--browser")
+
     if session.config.getoption("--host") == "saucelabs":
         session.config._metadata["host"] = "saucelabs"
         session.config._metadata["platform"] = session.config.getoption(
