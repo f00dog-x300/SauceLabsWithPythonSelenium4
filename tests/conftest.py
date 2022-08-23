@@ -32,8 +32,8 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
     config.base_url = request.config.getoption("--baseurl")
     config.browser = request.config.getoption("--browser").lower()
     config.host = request.config.getoption("--host").lower()
-    
-    if config.host == "saucelabs":
+
+    if config.host in ("saucelabs", "saucelabs-tunnel"):
         LOGGER.info(f">> Running tests on Saucelabs")
         test_name = request.node.name
         capabilities = {
@@ -44,6 +44,9 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
             }
 
         }
+        if config.host == "saucelabs-tunnel":
+            capabilities["sauce:options"]["tunnelIdentifier"] = os.environ["SAUCE_TUNNEL"]
+
         _credentials = f"{os.environ['SAUCE_USERNAME']}:{os.environ['SAUCE_ACCESS_KEY']}"
         _url = f"https://{_credentials}@ondemand.saucelabs.com/wd/hub"
         driver_ = webdriver.Remote(
@@ -179,7 +182,7 @@ def pytest_addoption(parser: Parser) -> None:
                      action="store",
                      default="localhost",
                      help="host for the test: localhost, saucelabs, browserstack",
-                     choices=("localhost", "saucelabs", "browserstack"))
+                     choices=("localhost", "saucelabs", "saucelabs-tunnel", "browserstack"))
     parser.addoption("--platform",
                      action="store",
                      default="Windows 10",
