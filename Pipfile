@@ -10,6 +10,7 @@ pytest-xdist = "2.5.0"
 selenium = "4.4.0"
 webdriver-manager = "*"
 pytest-html = "*"
+pytest-random = "*"
 
 [scripts]
 sauce-test = "pytest --host=saucelabs --browserversion=latest --platform='Windows 10'"

@@ -6,25 +6,20 @@ from datetime import datetime
 from pathlib import Path
 # selenium dependencies
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromiumService
-from selenium.webdriver.firefox.service import Service as FirefoxService
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.webdriver.remote.webdriver import WebDriver
-# webdriver manager dependencies
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.firefox import GeckoDriverManager
-from webdriver_manager.core.utils import ChromeType
 # imported pages
 from pages.login_page import LoginPage
 from pages.dynamic_loading_pages import DynamicLoadingPage
+# just for the type annotations
 from _pytest.fixtures import FixtureRequest
 from _pytest.config.argparsing import Parser
+from drivers.base_driver import ChromeRunner, FirefoxRunner
+
 
 LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture
-def driver(request: FixtureRequest, headless: bool) -> WebDriver:
+def driver(request: FixtureRequest, headless: bool) -> webdriver:
     """Webdriver that initiates the browser and sets up the test environment.
     Utilizes request pytest fixture and headless option."""
 
@@ -49,6 +44,7 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
 
         _credentials = f"{os.environ['SAUCE_USERNAME']}:{os.environ['SAUCE_ACCESS_KEY']}"
         _url = f"https://{_credentials}@ondemand.saucelabs.com/wd/hub"
+
         driver_ = webdriver.Remote(
             command_executor=_url,
             desired_capabilities=capabilities
@@ -57,62 +53,40 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
     elif config.host == "browserstack":
         LOGGER.info(f">> Running tests on Browserstack")
         test_name = request.node.name
-        bstack_options = {
-            "browserName": config.browser,
-            "browserVersion": "latest",
-            "os": "Windows",
-            "osVersion": "10",
-            # "sessionName": "pytest-browserstack",
-            "build": test_name,
-            "networkLogs": True,
 
+        desired_cap = {
+            'bstack:options': {
+                "os": "Windows",
+                "osVersion": "10",
+                "local": "false",
+                "seleniumVersion": "4.1.2",
+                "networkLogs": True,
+                "sessionName": test_name,
+            },
+            "browserName": "Chrome",
+            "browserVersion": "latest",
         }
 
         username = os.environ['BS_USERNAME']
         access_key = os.environ['BS_ACCESS_KEY']
 
-        LOGGER.info(f"bs_stackoptions: {bstack_options}")
+        LOGGER.info(f"bs_stackoptions: {desired_cap}")
         URL = f"https://{username}:{access_key}@hub.browserstack.com/wd/hub"
         driver_ = webdriver.Remote(
             command_executor=URL,
-            desired_capabilities=bstack_options
+            desired_capabilities=desired_cap
         )
 
     elif config.host == "localhost":
         LOGGER.info(f">> Running tests on localhost")
 
         if config.browser == "chrome":
-            LOGGER.info(">> Browser: Chrome")
-            chrome_options = webdriver.ChromeOptions()
-
-            if headless == True:
-                LOGGER.info("Headless mode enabled")
-                chrome_options.add_argument("--headless")
-            chrome_options.add_argument("--start-maximized")
-            chrome_options.add_argument("--log-level=3")
-            chrome_options.add_argument("--disable-extensions")
-
-            driver_ = webdriver.Chrome(
-                service=ChromiumService(
-                    ChromeDriverManager(
-                        chrome_type=ChromeType.CHROMIUM).install()
-                ),
-                options=chrome_options)
+            chrome_runner = ChromeRunner(headless=headless)
+            driver_ = chrome_runner.start_driver()
 
         elif config.browser == "firefox":
-            LOGGER.info(">> Browser: Firefox")
-            options = FirefoxOptions()
-
-            if headless:
-                LOGGER.info("Headless mode enabled")
-                options.headless = True
-
-            driver_ = webdriver.Firefox(
-                options=options,
-                service=FirefoxService(GeckoDriverManager().install(),
-                                       log_path=os.devnull),
-            )
-            driver_.maximize_window()
+            ff_runner = FirefoxRunner(headless=headless)
+            driver_ = ff_runner.start_driver()
 
     yield driver_
 
@@ -143,14 +117,14 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
 
 
 @pytest.fixture
-def login(driver: WebDriver) -> LoginPage:
+def login(driver: webdriver) -> LoginPage:
     """Page fixture for the login page. Returns a LoginPage object."""
     login_page = LoginPage(driver)
     return login_page
 
 
 @pytest.fixture
-def dynamic_loading(driver: WebDriver) -> DynamicLoadingPage:
+def dynamic_loading(driver: webdriver) -> DynamicLoadingPage:
     """Page fixture for the dynamic loading page. Returns a DynamicLoadingPage object."""
     dynamic_loading_page = DynamicLoadingPage(driver)
     return dynamic_loading_page
@@ -192,10 +166,10 @@ def pytest_addoption(parser: Parser) -> None:
 @pytest.fixture
 def headless(request: FixtureRequest) -> bool:
     """CLI option to run tests in headless mode"""
-    return bool(request.config.getoption("--headless").capitalize())
+    is_headless = request.config.getoption('--headless').capitalize()
+    return True if is_headless == "True" else False
 
 
-# reporting section
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)  # added all below
 def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:
     """Sets the result of each test in the report."""
@@ -250,8 +224,14 @@ def pytest_sessionfinish(session, exitstatus):
     session.config._metadata["tags"] = ["pytest", "selenium", "python"]
     session.config._metadata["browser"] = session.config.getoption("--browser")
 
-    if session.config.getoption("--host") == "saucelabs":
-        session.config._metadata["host"] = "saucelabs"
+    if session.config.getoption("--host") in ("saucelabs", "saucelabs-tunnel", "browserstack"):
+
+        if session.config.getoption("--host") in ("saucelabs", "saucelabs-tunnel"):
+            session.config._metadata["host"] = "saucelabs"
+
+        else:
+            session.config._metadata["host"] = "browserstack"
+
         session.config._metadata["platform"] = session.config.getoption(
             "--platform")
         session.config._metadata["browser version"] = session.config.getoption(
