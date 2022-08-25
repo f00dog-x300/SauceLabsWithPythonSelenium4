@@ -4,21 +4,27 @@ import pytest
 import os
 from datetime import datetime
 from pathlib import Path
+
 # selenium dependencies
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromiumService
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.remote.webdriver import WebDriver
+
 # webdriver manager dependencies
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.core.utils import ChromeType
+
 # imported pages
 from pages.login_page import LoginPage
 from pages.dynamic_loading_pages import DynamicLoadingPage
+
+# just for the type annotations
 from _pytest.fixtures import FixtureRequest
 from _pytest.config.argparsing import Parser
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -57,25 +63,28 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
     elif config.host == "browserstack":
         LOGGER.info(f">> Running tests on Browserstack")
         test_name = request.node.name
-        bstack_options = {
-            "browserName": config.browser,
+        
+        desired_cap = {
+            'bstack:options': {
+                "os": "Windows",
+                "osVersion": "10",
+                "local": "false",
+                "seleniumVersion": "4.1.2",
+                "networkLogs": True,
+                "sessionName": test_name,
+            },
+            "browserName": "Chrome",
             "browserVersion": "latest",
-            "os": "Windows",
-            "osVersion": "10",
-            # "sessionName": "pytest-browserstack",
-            "build": test_name,
-            "networkLogs": True,
-
         }
 
         username = os.environ['BS_USERNAME']
         access_key = os.environ['BS_ACCESS_KEY']
 
-        LOGGER.info(f"bs_stackoptions: {bstack_options}")
+        LOGGER.info(f"bs_stackoptions: {desired_cap}")
         URL = f"https://{username}:{access_key}@hub.browserstack.com/wd/hub"
         driver_ = webdriver.Remote(
             command_executor=URL,
-            desired_capabilities=bstack_options
+            desired_capabilities=desired_cap
         )
 
     elif config.host == "localhost":
