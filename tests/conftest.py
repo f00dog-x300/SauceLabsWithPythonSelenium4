@@ -12,7 +12,7 @@ from pages.dynamic_loading_pages import DynamicLoadingPage
 # just for the type annotations
 from _pytest.fixtures import FixtureRequest
 from _pytest.config.argparsing import Parser
-from drivers.base_driver import ChromeRunner, FirefoxRunner
+from drivers.localrunner import ChromeRunner, FirefoxRunner
 
 
 LOGGER = logging.getLogger(__name__)

@@ -27,7 +27,7 @@ class ChromeRunner(LocalRunner):
         options = webdriver.ChromeOptions()
         if self.headless == True:
             LOGGER.info(
-                f"Headless mode enabled: {type(self.headless)} - {self.headless}")
+                f"...Headless mode enabled (chrome)")
             options.add_argument("--headless")
         options.add_argument("start-maximized")
         options.add_argument("--disable-extensions")
@@ -54,7 +54,7 @@ class FirefoxRunner(LocalRunner):
         options = FirefoxOptions()
 
         if self.headless:
-            LOGGER.info("Headless mode enabled")
+            LOGGER.info("...Headless mode enabled (firefox)")
             options.headless = True
         return options
 
@@ -66,4 +66,5 @@ class FirefoxRunner(LocalRunner):
             ),
             options=self.capabilities
         )
+        driver_.maximize_window()
         return driver_
