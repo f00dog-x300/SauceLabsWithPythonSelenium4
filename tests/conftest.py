@@ -64,11 +64,11 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
             "browserVersion": "latest",
         }
 
-        username = os.environ["'BS_USERNAME"]
+        username = os.environ["BS_USERNAME"]
         access_key = os.environ["BS_ACCESS_KEY"]
 
         LOGGER.info(f"bs_stackoptions: {desired_cap}")
-        URL = f"https://{username}:{access_key}@hub.browserstack.com/wd/hub" # pylint: disable=invalid-name
+        URL = f"https://{username}:{access_key}@hub.browserstack.com/wd/hub"  # pylint: disable=invalid-name
         driver_ = webdriver.Remote(
             command_executor=URL,
             desired_capabilities=desired_cap
