@@ -1,18 +1,15 @@
-import tests.config as config
 import logging
-import pytest
 import os
 from datetime import datetime
 from pathlib import Path
-# selenium dependencies
+import pytest
 from selenium import webdriver
-# imported pages
-from pages.login_page import LoginPage
-from pages.dynamic_loading_pages import DynamicLoadingPage
-# just for the type annotations
 from _pytest.fixtures import FixtureRequest
 from _pytest.config.argparsing import Parser
+from pages.login_page import LoginPage
+from pages.dynamic_loading_pages import DynamicLoadingPage
 from drivers.localrunner import ChromeRunner, FirefoxRunner
+import tests.config as config
 
 
 LOGGER = logging.getLogger(__name__)
@@ -29,7 +26,7 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
     config.host = request.config.getoption("--host").lower()
 
     if config.host in ("saucelabs", "saucelabs-tunnel"):
-        LOGGER.info(f">> Running tests on Saucelabs")
+        LOGGER.info(">> Running tests on Saucelabs")
         test_name = request.node.name
         capabilities = {
             "browserName": config.browser,
@@ -51,11 +48,11 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
         )
 
     elif config.host == "browserstack":
-        LOGGER.info(f">> Running tests on Browserstack")
+        LOGGER.info(">> Running tests on Browserstack")
         test_name = request.node.name
 
         desired_cap = {
-            'bstack:options': {
+            "bstack:options": {
                 "os": "Windows",
                 "osVersion": "10",
                 "local": "false",
@@ -67,18 +64,18 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
             "browserVersion": "latest",
         }
 
-        username = os.environ['BS_USERNAME']
-        access_key = os.environ['BS_ACCESS_KEY']
+        username = os.environ["'BS_USERNAME"]
+        access_key = os.environ["BS_ACCESS_KEY"]
 
         LOGGER.info(f"bs_stackoptions: {desired_cap}")
-        URL = f"https://{username}:{access_key}@hub.browserstack.com/wd/hub"
+        URL = f"https://{username}:{access_key}@hub.browserstack.com/wd/hub" # pylint: disable=invalid-name
         driver_ = webdriver.Remote(
             command_executor=URL,
             desired_capabilities=desired_cap
         )
 
     elif config.host == "localhost":
-        LOGGER.info(f">> Running tests on localhost")
+        LOGGER.info(">> Running tests on localhost")
 
         if config.browser == "chrome":
             chrome_runner = ChromeRunner(headless=headless)
@@ -166,12 +163,12 @@ def pytest_addoption(parser: Parser) -> None:
 @pytest.fixture
 def headless(request: FixtureRequest) -> bool:
     """CLI option to run tests in headless mode"""
-    is_headless = request.config.getoption('--headless').capitalize()
+    is_headless = request.config.getoption("--headless").capitalize()
     return True if is_headless == "True" else False
 
 
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)  # added all below
-def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:
+def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:  # pylint: disable=unused-argument
     """Sets the result of each test in the report."""
     pytest_html = item.config.pluginmanager.getplugin("html")
     outcome = yield
@@ -207,7 +204,7 @@ def pytest_configure(config):
     if not config.option.htmlpath:
         now = datetime.now()
         # create report target dir
-        reports_dir = Path('reports', now.strftime('%Y-%m-%d'))
+        reports_dir = Path("reports", now.strftime("%Y-%m-%d"))
         reports_dir.mkdir(parents=True, exist_ok=True)
         # custom report file
         report = reports_dir / f"report_{now.strftime('%H%M')}.html"
@@ -217,7 +214,7 @@ def pytest_configure(config):
 
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_sessionfinish(session, exitstatus):
+def pytest_sessionfinish(session, exitstatus):  # pylint: disable=unused-argument
     """Adds metadata to the HTML report."""
     session.config._metadata["project"] = "Demo"
     session.config._metadata["person running"] = os.getlogin()

@@ -1,14 +1,14 @@
 import logging
 import os
 from dataclasses import dataclass
-from drivers.base_driver import LocalRunner
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromiumService
-from webdriver_manager.core.utils import ChromeType
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from webdriver_manager.core.utils import ChromeType
+from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
+from drivers.base_driver import LocalRunner
 
 
 LOGGER = logging.getLogger(__name__)
@@ -22,12 +22,13 @@ class ChromeRunner(LocalRunner):
 
     @property
     def capabilities(self) -> webdriver.ChromeOptions:
+        """List out capabilities"""
         LOGGER.info(">> Browser: Chrome")
 
         options = webdriver.ChromeOptions()
-        if self.headless == True:
+        if self.headless is True:
             LOGGER.info(
-                f"...Headless mode enabled (chrome)")
+                "...Headless mode enabled (chrome)")
             options.add_argument("--headless")
         options.add_argument("start-maximized")
         options.add_argument("--disable-extensions")
@@ -35,6 +36,7 @@ class ChromeRunner(LocalRunner):
         return options
 
     def start_driver(self) -> webdriver:
+        """Starts Chrome Driver and returns driver instance."""
         driver_ = webdriver.Chrome(
             service=ChromiumService(
                 ChromeDriverManager(
@@ -51,6 +53,7 @@ class FirefoxRunner(LocalRunner):
 
     @property
     def capabilities(self) -> webdriver.FirefoxOptions:
+        """Returns FireFox capabilities"""
         options = FirefoxOptions()
 
         if self.headless:
@@ -59,6 +62,7 @@ class FirefoxRunner(LocalRunner):
         return options
 
     def start_driver(self) -> webdriver:
+        """Starts Firefox Driver and returns driver instance."""
         driver_ = webdriver.Firefox(
             service=FirefoxService(
                 GeckoDriverManager().install(),

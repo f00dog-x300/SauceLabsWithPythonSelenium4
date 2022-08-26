@@ -11,6 +11,7 @@ selenium = "4.4.0"
 webdriver-manager = "*"
 pytest-html = "*"
 pytest-random = "*"
+pylint = "==2.13.9"
 
 [scripts]
 sauce-test = "pytest --host=saucelabs --browserversion=latest --platform='Windows 10'"
@@ -19,7 +20,6 @@ local-test = "pytest --host=localhost"
 [dev-packages]
 autopep8 = "1.7.0"
 rope = "1.3.0"
-pylint = "2.14.5"
 
 [requires]
 python_version = "3.10"
