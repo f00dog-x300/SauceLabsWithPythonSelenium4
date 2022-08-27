@@ -64,11 +64,11 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
             "browserVersion": "latest",
         }
 
-        username = os.environ["BS_USERNAME"]
-        access_key = os.environ["BS_ACCESS_KEY"]
+        _username = os.environ["BS_USERNAME"]
+        _access_key = os.environ["BS_ACCESS_KEY"]
 
         LOGGER.info(f"bs_stackoptions: {desired_cap}")
-        URL = f"https://{username}:{access_key}@hub.browserstack.com/wd/hub"  # pylint: disable=invalid-name
+        URL = f"https://{_username}:{_access_key}@hub.browserstack.com/wd/hub"  # pylint: disable=invalid-name
         driver_ = webdriver.Remote(
             command_executor=URL,
             desired_capabilities=desired_cap
@@ -169,7 +169,7 @@ def headless(request: FixtureRequest) -> bool:
     return True if is_headless == "True" else False
 
 
-@pytest.hookimpl(hookwrapper=True, tryfirst=True)  # added all below
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
 def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:  # pylint: disable=unused-argument
     """Sets the result of each test in the report."""
     pytest_html = item.config.pluginmanager.getplugin("html")
