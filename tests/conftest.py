@@ -9,7 +9,7 @@ from _pytest.config.argparsing import Parser
 from pages.login_page import LoginPage
 from pages.dynamic_loading_pages import DynamicLoadingPage
 from drivers.localrunner import ChromeRunner, FirefoxRunner
-import tests.config as config
+import tests.config as setting
 
 
 LOGGER = logging.getLogger(__name__)
@@ -21,22 +21,22 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
     Utilizes request pytest fixture and headless option."""
 
     # configurations from CLI
-    config.base_url = request.config.getoption("--baseurl")
-    config.browser = request.config.getoption("--browser").lower()
-    config.host = request.config.getoption("--host").lower()
+    setting.BASE_URL = request.config.getoption("--baseurl")
+    setting.BROWSER = request.config.getoption("--browser").lower()
+    setting.HOST = request.config.getoption("--host").lower()
 
-    if config.host in ("saucelabs", "saucelabs-tunnel"):
+    if setting.HOST in ("saucelabs", "saucelabs-tunnel"):
         LOGGER.info(">> Running tests on Saucelabs")
         test_name = request.node.name
         capabilities = {
-            "browserName": config.browser,
-            "platformName": config.platform,
+            "browserName": setting.BROWSER,
+            "platformName": setting.PLATFORM,
             "sauce:options": {
                 "name": test_name
             }
 
         }
-        if config.host == "saucelabs-tunnel":
+        if setting.HOST == "saucelabs-tunnel":
             capabilities["sauce:options"]["tunnelIdentifier"] = os.environ["SAUCE_TUNNEL"]
 
         _credentials = f"{os.environ['SAUCE_USERNAME']}:{os.environ['SAUCE_ACCESS_KEY']}"
@@ -47,7 +47,7 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
             desired_capabilities=capabilities
         )
 
-    elif config.host == "browserstack":
+    elif setting.HOST == "browserstack":
         LOGGER.info(">> Running tests on Browserstack")
         test_name = request.node.name
 
@@ -74,14 +74,14 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
             desired_capabilities=desired_cap
         )
 
-    elif config.host == "localhost":
+    elif setting.HOST == "localhost":
         LOGGER.info(">> Running tests on localhost")
 
-        if config.browser == "chrome":
+        if setting.BROWSER == "chrome":
             chrome_runner = ChromeRunner(headless=headless)
             driver_ = chrome_runner.start_driver()
 
-        elif config.browser == "firefox":
+        elif setting.BROWSER == "firefox":
             ff_runner = FirefoxRunner(headless=headless)
             driver_ = ff_runner.start_driver()
 
@@ -94,10 +94,10 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
         # TODO: explore using capsys here to capture stdout and stderr
         test_result = "failed" if request.node.rep_call.failed else "passed"
 
-        if config.host == "saucelabs":
+        if setting.HOST == "saucelabs":
             driver_.execute_script(f"sauce:job-result={test_result}")
 
-        if config.host == "browserstack":
+        if setting.HOST == "browserstack":
             LOGGER.info(f">> Browserstack result: {test_result}")
 
             if test_result == "passed":
@@ -156,8 +156,12 @@ def pytest_addoption(parser: Parser) -> None:
                      choices=("localhost", "saucelabs", "saucelabs-tunnel", "browserstack"))
     parser.addoption("--platform",
                      action="store",
-                     default="Windows 10",
+                     default="Windows",
                      help="OS platform for the test")
+    parser.addoption("--os-version",
+                     action="store",
+                     default="10",
+                     help="OS version for the test")
 
 
 @pytest.fixture
