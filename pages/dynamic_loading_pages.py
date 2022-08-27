@@ -14,10 +14,13 @@ class DynamicLoadingPage(BasePage):
         assert self._is_displayed(self._start_button)
 
     def click_start_button(self) -> None:
+        """Clicks start button"""
         self._click(self._start_button)
     
     def is_loading_bar_present(self) -> bool:
+        """Does a check if loading bar present"""
         return self._is_displayed(self._loading_bar)
 
     def is_hello_world_text_present(self) -> bool:
+        """Checks if text hello world is present"""
         return self._is_displayed(self._hello_world_text)

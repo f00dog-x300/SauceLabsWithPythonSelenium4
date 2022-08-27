@@ -25,7 +25,9 @@ class LoginPage(BasePage):
         self._click(self._submit_button)
 
     def success_message_present(self):
+        """Display success message if present."""
         return self._is_displayed(self._success_message)
 
     def failure_message_present(self):
+        """Display failure message if present."""
         return self._is_displayed(self._failure_message)

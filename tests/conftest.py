@@ -159,9 +159,7 @@ def pytest_addoption(parser: Parser) -> None:
                      default="Windows",
                      help="OS platform for the test")
     parser.addoption("--os-version",
-                     action="store",
-                     default="10",
-                     help="OS version for the test")
+                     action="store",)
 
 
 @pytest.fixture

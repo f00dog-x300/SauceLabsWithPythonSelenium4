@@ -1,4 +1,3 @@
-import pytest
 from pages.dynamic_loading_pages import DynamicLoadingPage
 
 def test_finish_loading_page(dynamic_loading: DynamicLoadingPage):
