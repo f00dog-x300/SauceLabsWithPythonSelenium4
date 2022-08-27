@@ -1,13 +1,14 @@
-from selenium import webdriver
 import logging
-import tests.config as config
+from selenium import webdriver
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException
+import tests.config as setting
 
 
 LOGGER = logging.getLogger(__name__)
+
 
 class BasePage:
 
@@ -17,7 +18,7 @@ class BasePage:
 
     def _visit(self, url: str) -> None:
         """Visit a url. Requires url to be a string."""
-        target_url = f"{config.base_url}/{url}"
+        target_url = f"{setting.BASE_URL}/{url}"
         LOGGER.info(f"Visiting {target_url}")
         self.driver.get(f"{target_url}")
 
@@ -33,8 +34,8 @@ class BasePage:
                 )
             )
             return element
-        except TimeoutException as e:
-            LOGGER.error(f"Could not find element {locator}. Stacktrace: {e}")
+        except TimeoutException as exception:
+            LOGGER.error(f"Could not find element {locator}. Stacktrace: {exception}")
 
     def _click(self, locator: dict) -> None:
         """Clicks an element. Requires a dictionary with the "by" and "value" keys."""
@@ -56,7 +57,7 @@ class BasePage:
                 )
             )
             return element.is_displayed()
-        
+
         except TimeoutException:
-            LOGGER.error(f"Element is currently not displayed in screen.")
+            LOGGER.error("Element is currently not displayed in screen.")
             return False
