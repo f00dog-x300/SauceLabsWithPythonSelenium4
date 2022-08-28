@@ -14,8 +14,13 @@ pytest-random = "*"
 pylint = "==2.13.9"
 
 [scripts]
-sauce-test = "pytest --host=saucelabs --browserversion=latest --platform='Windows 10'"
-local-test = "pytest --host=localhost"
+sauce-windows-chrome = "pytest --host=saucelabs --browserversion=latest --platform='Windows' --os-version=10 --browser=chrome"
+sauce-windows-firefox = "pytest --host=saucelabs --browserversion=latest --platform='Windows' --os-version=10 --browser=firefox"
+bs-windows-chrome = "pytest --host=browserstack --browserversion=latest --platform='Windows' --os-version=10 --browser=chrome"
+bs-windows-firefox = "pytest --host=browserstack --browserversion=latest --platform='Windows' --os-version=10 --browser=chrome"
+local-test-chrome = "pytest --host=localhost --browser=chrome"
+local-test-firefox = "pytest --host=localhost --browser=firefox"
+
 
 [dev-packages]
 autopep8 = "1.7.0"

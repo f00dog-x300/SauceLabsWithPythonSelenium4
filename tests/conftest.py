@@ -21,22 +21,31 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
     Utilizes request pytest fixture and headless option."""
 
     # configurations from CLI
-    setting.BASE_URL = request.config.getoption("--baseurl")
-    setting.BROWSER = request.config.getoption("--browser").lower()
-    setting.HOST = request.config.getoption("--host").lower()
+    # uses values from CLI commands else uses pre-set values from config.py
+    setting.BASE_URL = request.config.getoption(
+        "--baseurl") or setting.BASE_URL
+    setting.BROWSER = request.config.getoption(
+        "--browser").lower() or setting.BROWSER
+    setting.HOST = request.config.getoption("--host").lower() or setting.HOST
+    setting.OS_VERSION = request.config.getoption(
+        "--os-version") or setting.OS_VERSION
+    setting.PLATFORM = request.config.getoption(
+        "--platform") or setting.PLATFORM
 
     if setting.HOST in ("saucelabs", "saucelabs-tunnel"):
         LOGGER.info(">> Running tests on Saucelabs")
         test_name = request.node.name
         capabilities = {
             "browserName": setting.BROWSER,
-            "platformName": setting.PLATFORM,
+            "platformName": f"{setting.PLATFORM} {setting.OS_VERSION}",
             "sauce:options": {
                 "name": test_name
             }
 
         }
+        LOGGER.info(f"... sauce capabilities: {capabilities}")
         if setting.HOST == "saucelabs-tunnel":
+            LOGGER.info("... Using tunnel to Saucelabs")
             capabilities["sauce:options"]["tunnelIdentifier"] = os.environ["SAUCE_TUNNEL"]
 
         _credentials = f"{os.environ['SAUCE_USERNAME']}:{os.environ['SAUCE_ACCESS_KEY']}"
@@ -47,32 +56,36 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
             desired_capabilities=capabilities
         )
 
+        driver_.maximize_window()
+
     elif setting.HOST == "browserstack":
         LOGGER.info(">> Running tests on Browserstack")
         test_name = request.node.name
 
         desired_cap = {
             "bstack:options": {
-                "os": "Windows",
-                "osVersion": "10",
+                "os": setting.PLATFORM,
+                "osVersion": setting.OS_VERSION,
                 "local": "false",
                 "seleniumVersion": "4.1.2",
                 "networkLogs": True,
                 "sessionName": test_name,
             },
-            "browserName": "Chrome",
+            "browserName": setting.BROWSER,
             "browserVersion": "latest",
         }
 
-        username = os.environ["BS_USERNAME"]
-        access_key = os.environ["BS_ACCESS_KEY"]
+        _username = os.environ["BS_USERNAME"]
+        _access_key = os.environ["BS_ACCESS_KEY"]
 
         LOGGER.info(f"bs_stackoptions: {desired_cap}")
-        URL = f"https://{username}:{access_key}@hub.browserstack.com/wd/hub"  # pylint: disable=invalid-name
+        URL = f"https://{_username}:{_access_key}@hub.browserstack.com/wd/hub"  # pylint: disable=invalid-name
         driver_ = webdriver.Remote(
             command_executor=URL,
             desired_capabilities=desired_cap
         )
+
+        driver_.maximize_window()
 
     elif setting.HOST == "localhost":
         LOGGER.info(">> Running tests on localhost")
@@ -92,7 +105,8 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
         has finished. Also reports to host if pass or failed 
         test."""
         # TODO: explore using capsys here to capture stdout and stderr
-        test_result = "failed" if request.node.rep_call.failed else "passed"
+        test_result = "passed" if (request.node.rep_call.passed) else "failed"
+
 
         if setting.HOST == "saucelabs":
             driver_.execute_script(f"sauce:job-result={test_result}")
@@ -156,10 +170,12 @@ def pytest_addoption(parser: Parser) -> None:
                      choices=("localhost", "saucelabs", "saucelabs-tunnel", "browserstack"))
     parser.addoption("--platform",
                      action="store",
-                     default="Windows",
-                     help="OS platform for the test")
+                     help="OS platform for the test",
+                     choices=("Windows", "OS X", "Linux"))
     parser.addoption("--os-version",
-                     action="store",)
+                     action="store",
+                     help="OS version for the test",
+                     choices=("10", "11", "Monterey", "Big Sur"))
 
 
 @pytest.fixture
@@ -169,7 +185,7 @@ def headless(request: FixtureRequest) -> bool:
     return True if is_headless == "True" else False
 
 
-@pytest.hookimpl(hookwrapper=True, tryfirst=True)  # added all below
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
 def pytest_runtest_makereport(item: pytest.Item, call: pytest.CallInfo) -> None:  # pylint: disable=unused-argument
     """Sets the result of each test in the report."""
     pytest_html = item.config.pluginmanager.getplugin("html")
