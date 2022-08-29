@@ -8,17 +8,18 @@ from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from webdriver_manager.core.utils import ChromeType
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
-from drivers.base_driver import LocalRunner
+from drivers.base_driver import BaseRunner
 
 
 LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
-class ChromeRunner(LocalRunner):
+class ChromeRunner(BaseRunner):
     """Chrome driver"""
 
     headless: bool
+    testname: str
 
     @property
     def capabilities(self) -> webdriver.ChromeOptions:
@@ -43,13 +44,15 @@ class ChromeRunner(LocalRunner):
                     chrome_type=ChromeType.CHROMIUM).install()
             ),
             options=self.capabilities)
+        LOGGER.info(f"... testing> {self.testname}")
         return driver_
 
 
 @dataclass
-class FirefoxRunner(LocalRunner):
+class FirefoxRunner(BaseRunner):
 
     headless: bool
+    testname: str
 
     @property
     def capabilities(self) -> webdriver.FirefoxOptions:
@@ -71,4 +74,5 @@ class FirefoxRunner(LocalRunner):
             options=self.capabilities
         )
         driver_.maximize_window()
+        LOGGER.info(f"... testing> {self.testname}")
         return driver_

@@ -1,26 +1,25 @@
 import logging
 import os
+import pytest
+import config as setting
 from datetime import datetime
 from pathlib import Path
-import pytest
 from selenium import webdriver
 from _pytest.fixtures import FixtureRequest
 from _pytest.config.argparsing import Parser
 from pages.login_page import LoginPage
 from pages.dynamic_loading_pages import DynamicLoadingPage
 from drivers.localrunner import ChromeRunner, FirefoxRunner
-import tests.config as setting
+from drivers.remote_driver import BSRunner, SauceRunner
 
 
 LOGGER = logging.getLogger(__name__)
-
 
 @pytest.fixture
 def driver(request: FixtureRequest, headless: bool) -> webdriver:
     """Webdriver that initiates the browser and sets up the test environment.
     Utilizes request pytest fixture and headless option."""
 
-    # configurations from CLI
     # uses values from CLI commands else uses pre-set values from config.py
     setting.BASE_URL = request.config.getoption(
         "--baseurl") or setting.BASE_URL
@@ -32,70 +31,29 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
     setting.PLATFORM = request.config.getoption(
         "--platform") or setting.PLATFORM
 
+    test_name = request.node.name
+
     if setting.HOST in ("saucelabs", "saucelabs-tunnel"):
         LOGGER.info(">> Running tests on Saucelabs")
-        test_name = request.node.name
-        capabilities = {
-            "browserName": setting.BROWSER,
-            "platformName": f"{setting.PLATFORM} {setting.OS_VERSION}",
-            "sauce:options": {
-                "name": test_name
-            }
-
-        }
-        LOGGER.info(f"... sauce capabilities: {capabilities}")
-        if setting.HOST == "saucelabs-tunnel":
-            LOGGER.info("... Using tunnel to Saucelabs")
-            capabilities["sauce:options"]["tunnelIdentifier"] = os.environ["SAUCE_TUNNEL"]
-
-        _credentials = f"{os.environ['SAUCE_USERNAME']}:{os.environ['SAUCE_ACCESS_KEY']}"
-        _url = f"https://{_credentials}@ondemand.saucelabs.com/wd/hub"
-
-        driver_ = webdriver.Remote(
-            command_executor=_url,
-            desired_capabilities=capabilities
-        )
-
-        driver_.maximize_window()
+        sauce_driver = SauceRunner(testname=test_name)
+        driver_ = sauce_driver.start_driver()
 
     elif setting.HOST == "browserstack":
         LOGGER.info(">> Running tests on Browserstack")
-        test_name = request.node.name
-
-        desired_cap = {
-            "bstack:options": {
-                "os": setting.PLATFORM,
-                "osVersion": setting.OS_VERSION,
-                "local": "false",
-                "seleniumVersion": "4.1.2",
-                "networkLogs": True,
-                "sessionName": test_name,
-            },
-            "browserName": setting.BROWSER,
-            "browserVersion": "latest",
-        }
-
-        _username = os.environ["BS_USERNAME"]
-        _access_key = os.environ["BS_ACCESS_KEY"]
-
-        LOGGER.info(f"bs_stackoptions: {desired_cap}")
-        URL = f"https://{_username}:{_access_key}@hub.browserstack.com/wd/hub"  # pylint: disable=invalid-name
-        driver_ = webdriver.Remote(
-            command_executor=URL,
-            desired_capabilities=desired_cap
-        )
-
-        driver_.maximize_window()
+        bs_runner = BSRunner(testname=test_name)
+        driver_ = bs_runner.start_driver()
 
     elif setting.HOST == "localhost":
         LOGGER.info(">> Running tests on localhost")
 
         if setting.BROWSER == "chrome":
-            chrome_runner = ChromeRunner(headless=headless)
+            LOGGER.info(f"... browser: {setting.BROWSER}")
+            chrome_runner = ChromeRunner(headless=headless, testname=test_name)
             driver_ = chrome_runner.start_driver()
 
         elif setting.BROWSER == "firefox":
-            ff_runner = FirefoxRunner(headless=headless)
+            LOGGER.info(f"... browser: {setting.BROWSER}")
+            ff_runner = FirefoxRunner(headless=headless, testname=test_name)
             driver_ = ff_runner.start_driver()
 
     yield driver_
@@ -106,7 +64,6 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
         test."""
         # TODO: explore using capsys here to capture stdout and stderr
         test_result = "passed" if (request.node.rep_call.passed) else "failed"
-
 
         if setting.HOST == "saucelabs":
             driver_.execute_script(f"sauce:job-result={test_result}")

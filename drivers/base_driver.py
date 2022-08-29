@@ -3,11 +3,10 @@ from abc import ABC, abstractmethod
 from selenium import webdriver
 
 
-
 LOGGER = logging.getLogger(__name__)
 
 
-class LocalRunner(ABC):
+class BaseRunner(ABC):
     """Base class for all drivers"""
 
     @property
@@ -20,5 +19,3 @@ class LocalRunner(ABC):
     def start_driver(self) -> webdriver:
         """Returns specific driver"""
         pass
-
-
