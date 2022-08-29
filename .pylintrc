@@ -161,7 +161,8 @@ disable=raw-checker-failed,
         logging-fstring-interpolation,
         protected-access,
         missing-final-newline,
-        super-init-not-called
+        super-init-not-called,
+        wrong-import-order
 
 
 # Enable the message, report, category or checker with the given id(s). You can
