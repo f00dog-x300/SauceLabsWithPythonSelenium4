@@ -12,6 +12,8 @@ webdriver-manager = "*"
 pytest-html = "*"
 pytest-random = "*"
 pylint = "==2.13.9"
+pylint-exit = "*"
+mypy = "*"
 
 [scripts]
 sauce-windows-chrome = "pytest --host=saucelabs --browserversion=latest --platform='Windows' --os-version=10 --browser=chrome"
@@ -20,7 +22,6 @@ bs-windows-chrome = "pytest --host=browserstack --browserversion=latest --platfo
 bs-windows-firefox = "pytest --host=browserstack --browserversion=latest --platform='Windows' --os-version=10 --browser=chrome"
 local-test-chrome = "pytest --host=localhost --browser=chrome"
 local-test-firefox = "pytest --host=localhost --browser=firefox"
-
 
 [dev-packages]
 autopep8 = "1.7.0"

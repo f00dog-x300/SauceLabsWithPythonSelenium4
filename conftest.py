@@ -4,7 +4,7 @@ import pytest
 import config as setting
 from datetime import datetime
 from pathlib import Path
-from selenium import webdriver
+from selenium.webdriver.remote.webdriver import WebDriver
 from _pytest.fixtures import FixtureRequest
 from _pytest.config.argparsing import Parser
 from pages.login_page import LoginPage
@@ -15,8 +15,9 @@ from drivers.remote_driver import BSRunner, SauceRunner
 
 LOGGER = logging.getLogger(__name__)
 
+
 @pytest.fixture
-def driver(request: FixtureRequest, headless: bool) -> webdriver:
+def driver(request: FixtureRequest, headless: bool) -> WebDriver:
     """Webdriver that initiates the browser and sets up the test environment.
     Utilizes request pytest fixture and headless option."""
 
@@ -85,14 +86,14 @@ def driver(request: FixtureRequest, headless: bool) -> webdriver:
 
 
 @pytest.fixture
-def login(driver: webdriver) -> LoginPage:
+def login(driver: WebDriver) -> LoginPage:
     """Page fixture for the login page. Returns a LoginPage object."""
     login_page = LoginPage(driver)
     return login_page
 
 
 @pytest.fixture
-def dynamic_loading(driver: webdriver) -> DynamicLoadingPage:
+def dynamic_loading(driver: WebDriver) -> DynamicLoadingPage:
     """Page fixture for the dynamic loading page. Returns a DynamicLoadingPage object."""
     dynamic_loading_page = DynamicLoadingPage(driver)
     return dynamic_loading_page

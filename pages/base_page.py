@@ -47,7 +47,7 @@ class BasePage:
         self._find(locator).clear()
         self._find(locator).send_keys(input_text)
 
-    def _is_displayed(self, locator: dict, timeout: int = 10) -> None:
+    def _is_displayed(self, locator: dict, timeout: int = 10) -> bool:
         """Checks if an element is displayed. Requires a dictionary with the "by" and "value" keys.
         Has default timeout of 10 seconds"""
         try:

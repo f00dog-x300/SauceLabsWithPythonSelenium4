@@ -1,6 +1,7 @@
 import logging
 import os
 from selenium import webdriver
+from selenium.webdriver.remote.webdriver import WebDriver
 from drivers.base_driver import BaseRunner
 import config as setting
 from dataclasses import dataclass
@@ -15,7 +16,7 @@ class BSRunner(BaseRunner):
     testname: str
 
     @property
-    def capabilities(self) -> webdriver.Remote:
+    def capabilities(self) -> dict[str:any]:
         """Gets config from CLI and conf.py"""
 
         desired_cap = {
@@ -34,7 +35,7 @@ class BSRunner(BaseRunner):
         LOGGER.info(f"bs_stackoptions: {desired_cap}")
         return desired_cap
 
-    def start_driver(self) -> webdriver:
+    def start_driver(self) -> WebDriver:
         """Connects to Browserstack and returns driver instance."""
         _username = os.environ["BS_USERNAME"]
         _access_key = os.environ["BS_ACCESS_KEY"]
