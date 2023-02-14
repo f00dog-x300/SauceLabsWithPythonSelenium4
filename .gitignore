@@ -1,5 +1,8 @@
 *cache*
 .[Vv][Ss][Cc]ode*
+.idea
 
 # for reports
 *.html
+
+*.lock

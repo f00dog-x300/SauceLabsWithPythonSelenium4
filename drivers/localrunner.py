@@ -1,5 +1,6 @@
 import logging
 import os
+import config as setting
 from dataclasses import dataclass
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromiumService
@@ -41,7 +42,8 @@ class ChromeRunner(BaseRunner):
         driver_ = webdriver.Chrome(
             service=ChromiumService(
                 ChromeDriverManager(
-                    chrome_type=ChromeType.CHROMIUM).install()
+                    chrome_type=ChromeType.CHROMIUM,
+                    version=setting.BROWSER_VERSION).install()
             ),
             options=self.capabilities)
         LOGGER.info(f"... testing> {self.testname}")
