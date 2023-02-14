@@ -14,6 +14,7 @@ pytest-random = "*"
 pylint = "==2.13.9"
 pylint-exit = "*"
 mypy = "*"
+pylint-quotes = "*"
 
 [scripts]
 sauce-windows-chrome = "pytest --host=saucelabs --browserversion=latest --platform='Windows' --os-version=10 --browser=chrome"
