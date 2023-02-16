@@ -31,6 +31,11 @@ class ChromeRunner(BaseRunner):
             LOGGER.info(
                 "...Headless mode enabled (chrome)")
             options.add_argument("--headless")
+        # to allow to work inside docker
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        
+        # for normal runs
         options.add_argument("start-maximized")
         options.add_argument("--disable-extensions")
         options.add_argument("--log-level=3")

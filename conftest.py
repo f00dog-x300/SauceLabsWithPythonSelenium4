@@ -193,7 +193,7 @@ def pytest_configure(config):
 def pytest_sessionfinish(session, exitstatus):  # pylint: disable=unused-argument
     """Adds metadata to the HTML report."""
     session.config._metadata["project"] = "Demo"
-    session.config._metadata["person running"] = os.getlogin()
+    # session.config._metadata["person running"] = os.getlogin()
     session.config._metadata["tags"] = ["pytest", "selenium", "python"]
     session.config._metadata["browser"] = session.config.getoption("--browser")
 
