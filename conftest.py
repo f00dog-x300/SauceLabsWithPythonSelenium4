@@ -34,33 +34,38 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
 
     test_name = request.node.name
 
-    if setting.HOST in ("saucelabs", "saucelabs-tunnel"):
-        LOGGER.info(">> Running tests on Saucelabs")
-        sauce_driver = SauceRunner(testname=test_name)
-        driver_ = sauce_driver.start_driver()
+    def set_host():
+        """Sets the host for the test."""
+        if setting.HOST in ("saucelabs", "saucelabs-tunnel"):
+            LOGGER.info(">> Running tests on Saucelabs")
+            sauce_driver = SauceRunner(testname=test_name)
+            driver_ = sauce_driver.start_driver()
 
-    elif setting.HOST == "browserstack":
-        LOGGER.info(">> Running tests on Browserstack")
-        bs_runner = BSRunner(testname=test_name)
-        driver_ = bs_runner.start_driver()
+        elif setting.HOST == "browserstack":
+            LOGGER.info(">> Running tests on Browserstack")
+            bs_runner = BSRunner(testname=test_name)
+            driver_ = bs_runner.start_driver()
 
-    elif setting.HOST == "localhost":
-        LOGGER.info(">> Running tests on localhost")
+        elif setting.HOST == "localhost":
+            LOGGER.info(">> Running tests on localhost")
 
-        if setting.BROWSER == "chrome":
-            LOGGER.info(f"... browser: {setting.BROWSER}")
-            chrome_runner = ChromeRunner(headless=headless, testname=test_name)
-            driver_ = chrome_runner.start_driver()
+            if setting.BROWSER == "chrome":
+                LOGGER.info(f"... browser: {setting.BROWSER}")
+                chrome_runner = ChromeRunner(headless=headless, testname=test_name)
+                driver_ = chrome_runner.start_driver()
 
-        elif setting.BROWSER == "firefox":
-            LOGGER.info(f"... browser: {setting.BROWSER}")
-            ff_runner = FirefoxRunner(headless=headless, testname=test_name)
-            driver_ = ff_runner.start_driver()
-    elif setting.HOST == "docker":
-        LOGGER.info(">> Running tests on docker")
-        docker_runner = DockerRunner(headless=headless, testname=test_name)
-        driver_ = docker_runner.start_driver()
+            elif setting.BROWSER == "firefox":
+                LOGGER.info(f"... browser: {setting.BROWSER}")
+                ff_runner = FirefoxRunner(headless=headless, testname=test_name)
+                driver_ = ff_runner.start_driver()
 
+        elif setting.HOST == "docker":
+            LOGGER.info(">> Running tests on docker")
+            docker_runner = DockerRunner(headless=headless, testname=test_name)
+            driver_ = docker_runner.start_driver()
+        return driver_
+
+    driver_ = set_host()
     yield driver_
 
     def quit() -> None:
