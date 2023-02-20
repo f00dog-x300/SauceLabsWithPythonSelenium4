@@ -22,6 +22,8 @@ bs-windows-chrome = "pytest --host=browserstack --browserversion=latest --platfo
 bs-windows-firefox = "pytest --host=browserstack --browserversion=latest --platform='Windows' --os-version=10 --browser=chrome"
 local-test-chrome = "pytest --host=localhost --browser=chrome"
 local-test-firefox = "pytest --host=localhost --browser=firefox"
+docker-test-chrome = "pytest --host=docker --browser=chrome --headless=True"
+
 
 [dev-packages]
 autopep8 = "1.7.0"

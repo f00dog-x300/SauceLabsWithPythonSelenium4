@@ -79,3 +79,31 @@ class SauceRunner(BaseRunner):
         LOGGER.info(f"... testing> {self.testname}")
         driver_.maximize_window()
         return driver_
+
+@dataclass
+class DockerRunner(BaseRunner):
+
+    headless: bool
+    testname: str
+
+    @property
+    def capabilities(self) -> dict:
+        """Gets config from CLI and conf.py"""
+        LOGGER.info(">> Browser: Chrome")
+
+        options = webdriver.ChromeOptions()
+        if self.headless is True:
+            LOGGER.info(
+                "...Headless mode enabled (chrome)")
+            options.add_argument("--headless")
+        options.add_argument("start-maximized")
+        options.add_argument("--disable-extensions")
+        options.add_argument("--log-level=3")
+        return options
+
+    def start_driver(self) -> webdriver:
+        """Connects to remote driver (docker) and returns driver instance."""
+        driver = webdriver.Remote(
+            command_executor="http://localhost:4444/wd/hub",
+            options=self.capabilities)
+        return driver
