@@ -1,5 +1,6 @@
 import logging
 import os
+import config as setting
 from dataclasses import dataclass
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromiumService

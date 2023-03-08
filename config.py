@@ -1,6 +1,5 @@
 BASE_URL = ""
 BROWSER = ""
-BROWSER_VERSION = ""
 HOST = ""
 PLATFORM = "macOS"
 OS_VERSION = "11"

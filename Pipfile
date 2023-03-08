@@ -8,12 +8,12 @@ pytest = "7.1.2"
 pytest-randomly = "3.12.0"
 pytest-xdist = "2.5.0"
 selenium = "4.4.0"
-webdriver-manager = "*"
 pytest-html = "*"
 pytest-random = "*"
 pylint = "==2.13.9"
 pylint-exit = "*"
 mypy = "*"
+webdriver-manager = "3.8.5"
 
 [scripts]
 sauce-windows-chrome = "pytest --host=saucelabs --browserversion=latest --platform='Windows' --os-version=10 --browser=chrome"
@@ -22,10 +22,10 @@ bs-windows-chrome = "pytest --host=browserstack --browserversion=latest --platfo
 bs-windows-firefox = "pytest --host=browserstack --browserversion=latest --platform='Windows' --os-version=10 --browser=chrome"
 local-test-chrome = "pytest --host=localhost --browser=chrome"
 local-test-firefox = "pytest --host=localhost --browser=firefox"
+docker-test-chrome = "pytest --host=docker --browser=chrome --headless=False"
+
 
 [dev-packages]
 autopep8 = "1.7.0"
 rope = "1.3.0"
-
-[requires]
-python_version = "3.10"
+pyclean = "2.2.0"
