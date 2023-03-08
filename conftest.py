@@ -10,7 +10,7 @@ from _pytest.config.argparsing import Parser
 from pages.login_page import LoginPage
 from pages.dynamic_loading_pages import DynamicLoadingPage
 from drivers.localrunner import ChromeRunner, FirefoxRunner
-from drivers.remote_driver import BSRunner, SauceRunner
+from drivers.remote_driver import BSRunner, DockerRunner, SauceRunner
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,29 +33,38 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
 
     test_name = request.node.name
 
-    if setting.HOST in ("saucelabs", "saucelabs-tunnel"):
-        LOGGER.info(">> Running tests on Saucelabs")
-        sauce_driver = SauceRunner(testname=test_name)
-        driver_ = sauce_driver.start_driver()
+    def set_host():
+        """Sets the host for the test."""
+        if setting.HOST in ("saucelabs", "saucelabs-tunnel"):
+            LOGGER.info(">> Running tests on Saucelabs")
+            sauce_driver = SauceRunner(testname=test_name)
+            driver_ = sauce_driver.start_driver()
 
-    elif setting.HOST == "browserstack":
-        LOGGER.info(">> Running tests on Browserstack")
-        bs_runner = BSRunner(testname=test_name)
-        driver_ = bs_runner.start_driver()
+        elif setting.HOST == "browserstack":
+            LOGGER.info(">> Running tests on Browserstack")
+            bs_runner = BSRunner(testname=test_name)
+            driver_ = bs_runner.start_driver()
 
-    elif setting.HOST == "localhost":
-        LOGGER.info(">> Running tests on localhost")
+        elif setting.HOST == "localhost":
+            LOGGER.info(">> Running tests on localhost")
 
-        if setting.BROWSER == "chrome":
-            LOGGER.info(f"... browser: {setting.BROWSER}")
-            chrome_runner = ChromeRunner(headless=headless, testname=test_name)
-            driver_ = chrome_runner.start_driver()
+            if setting.BROWSER == "chrome":
+                LOGGER.info(f"... browser: {setting.BROWSER}")
+                chrome_runner = ChromeRunner(headless=headless, testname=test_name)
+                driver_ = chrome_runner.start_driver()
 
-        elif setting.BROWSER == "firefox":
-            LOGGER.info(f"... browser: {setting.BROWSER}")
-            ff_runner = FirefoxRunner(headless=headless, testname=test_name)
-            driver_ = ff_runner.start_driver()
+            elif setting.BROWSER == "firefox":
+                LOGGER.info(f"... browser: {setting.BROWSER}")
+                ff_runner = FirefoxRunner(headless=headless, testname=test_name)
+                driver_ = ff_runner.start_driver()
 
+        elif setting.HOST == "docker":
+            LOGGER.info(">> Running tests on docker")
+            docker_runner = DockerRunner(headless=headless, testname=test_name)
+            driver_ = docker_runner.start_driver()
+        return driver_
+
+    driver_ = set_host()
     yield driver_
 
     def quit() -> None:
@@ -123,7 +132,7 @@ def pytest_addoption(parser: Parser) -> None:
                      action="store",
                      default="localhost",
                      help="host for the test: localhost, saucelabs, browserstack",
-                     choices=("localhost", "saucelabs", "saucelabs-tunnel", "browserstack"))
+                     choices=("localhost", "saucelabs", "saucelabs-tunnel", "browserstack", "docker"))
     parser.addoption("--platform",
                      action="store",
                      help="OS platform for the test",
@@ -191,7 +200,11 @@ def pytest_configure(config):
 def pytest_sessionfinish(session, exitstatus):  # pylint: disable=unused-argument
     """Adds metadata to the HTML report."""
     session.config._metadata["project"] = "Demo"
+<<<<<<< HEAD
     session.config._metadata["person running"] = os.getlogin()
+=======
+    # session.config._metadata["person running"] = os.getlogin()
+>>>>>>> 64b6d202c31ed1e1e9699e2354d4fba24fac80ec
     session.config._metadata["tags"] = ["pytest", "selenium", "python"]
     session.config._metadata["browser"] = session.config.getoption("--browser")
 
