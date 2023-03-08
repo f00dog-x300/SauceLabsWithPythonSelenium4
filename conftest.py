@@ -12,7 +12,6 @@ from pages.dynamic_loading_pages import DynamicLoadingPage
 from drivers.localrunner import ChromeRunner, FirefoxRunner
 from drivers.remote_driver import BSRunner, DockerRunner, SauceRunner
 
-
 LOGGER = logging.getLogger(__name__)
 
 
@@ -95,8 +94,7 @@ def driver(request: FixtureRequest, headless: bool) -> WebDriver:
 
 
 @pytest.fixture
-def login(driver: WebDriver) -> LoginPage:
-    """Page fixture for the login page. Returns a LoginPage object."""
+def login(driver: WebDriver):
     login_page = LoginPage(driver)
     return login_page
 
