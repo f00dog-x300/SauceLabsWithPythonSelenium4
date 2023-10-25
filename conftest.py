@@ -196,23 +196,23 @@ def pytest_configure(config):
         config.option.self_contained_html = True
 
 
-@pytest.hookimpl(tryfirst=True)
-def pytest_sessionfinish(session, exitstatus):  # pylint: disable=unused-argument
-    """Adds metadata to the HTML report."""
-    session.config._metadata["project"] = "Demo"
-    # session.config._metadata["person running"] = os.getlogin()
-    session.config._metadata["tags"] = ["pytest", "selenium", "python"]
-    session.config._metadata["browser"] = session.config.getoption("--browser")
+# # @pytest.hookimpl(tryfirst=True)
+# def pytest_sessionfinish(session, exitstatus):  # pylint: disable=unused-argument
+#     """Adds metadata to the HTML report."""
+#     session.config.metadata["project"] = "Demo"
+#     # session.config._metadata["person running"] = os.getlogin()
+#     session.config.metadata["tags"] = ["pytest", "selenium", "python"]
+#     session.config.metadata["browser"] = session.config.getoption("--browser")
 
-    if session.config.getoption("--host") in ("saucelabs", "saucelabs-tunnel", "browserstack"):
+#     if session.config.getoption("--host") in ("saucelabs", "saucelabs-tunnel", "browserstack"):
 
-        if session.config.getoption("--host") in ("saucelabs", "saucelabs-tunnel"):
-            session.config._metadata["host"] = "saucelabs"
+#         if session.config.getoption("--host") in ("saucelabs", "saucelabs-tunnel"):
+#             session.config._metadata["host"] = "saucelabs"
 
-        else:
-            session.config._metadata["host"] = "browserstack"
+#         else:
+#             session.config._metadata["host"] = "browserstack"
 
-        session.config._metadata["platform"] = session.config.getoption(
-            "--platform")
-        session.config._metadata["browser version"] = session.config.getoption(
-            "--browserversion")
+#         session.config._metadata["platform"] = session.config.getoption(
+#             "--platform")
+#         session.config._metadata["browser version"] = session.config.getoption(
+#             "--browserversion")
