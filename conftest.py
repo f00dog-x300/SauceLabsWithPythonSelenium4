@@ -11,7 +11,6 @@ from pages.login_page import LoginPage
 from pages.dynamic_loading_pages import DynamicLoadingPage
 from drivers.localrunner import ChromeRunner, FirefoxRunner
 from drivers.remote_driver import BSRunner, DockerRunner, SauceRunner
-from pytest_metadata.plugin import metadata_key
 
 LOGGER = logging.getLogger(__name__)
 
@@ -199,19 +198,19 @@ def pytest_configure(config):
 
 def pytest_configure(config):  # pylint: disable=unused-argument
     """Adds metadata to the HTML report."""
-    config.stash[metadata_key]["project"] = "Demo"
-    config.stash[metadata_key]["tags"] = ["pytest", "selenium", "python"]
-    config.stash[metadata_key]["browser"] = config.getoption("--browser")
+    config._metadata["project"] = "Demo"
+    config._metadata["tags"] = ["pytest", "selenium", "python"]
+    config._metadata["browser"] = config.getoption("--browser")
 
     if config.getoption("--host") in ("saucelabs", "saucelabs-tunnel", "browserstack"):
 
         if config.getoption("--host") in ("saucelabs", "saucelabs-tunnel"):
-            config.stash[metadata_key]["host"] = "saucelabs"
+            config._metadata["host"] = "saucelabs"
 
         else:
-            config.stash[metadata_key]["host"] = "browserstack"
+            config._metadata["host"] = "browserstack"
 
-        config.stash[metadata_key]["platform"] = config.getoption(
+        config._metadata["platform"] = config.getoption(
             "--platform")
-        config.stash[metadata_key]["browser version"] = config.getoption(
+        config._metadata["browser version"] = config.getoption(
             "--browserversion")

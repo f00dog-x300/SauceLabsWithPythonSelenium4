@@ -13,9 +13,9 @@ python = "^3.10"
 pytest = "7.4.0"
 pytest-xdist = "2.5.0"
 pytest-html = "3.2.0"
-pytest-metadata = "^3.0.0"
 selenium = "^4.14.0"
 webdriver-manager = "^4.0.1"
+pytest-metadata = "2.0.4"
 
 
 [tool.poetry.group.dev.dependencies]
