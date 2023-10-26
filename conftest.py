@@ -11,6 +11,7 @@ from pages.login_page import LoginPage
 from pages.dynamic_loading_pages import DynamicLoadingPage
 from drivers.localrunner import ChromeRunner, FirefoxRunner
 from drivers.remote_driver import BSRunner, DockerRunner, SauceRunner
+from pytest_metadata.plugin import metadata_key
 
 LOGGER = logging.getLogger(__name__)
 
@@ -196,23 +197,21 @@ def pytest_configure(config):
         config.option.self_contained_html = True
 
 
-# # @pytest.hookimpl(tryfirst=True)
-# def pytest_sessionfinish(session, exitstatus):  # pylint: disable=unused-argument
-#     """Adds metadata to the HTML report."""
-#     session.config.metadata["project"] = "Demo"
-#     # session.config._metadata["person running"] = os.getlogin()
-#     session.config.metadata["tags"] = ["pytest", "selenium", "python"]
-#     session.config.metadata["browser"] = session.config.getoption("--browser")
+def pytest_configure(config):  # pylint: disable=unused-argument
+    """Adds metadata to the HTML report."""
+    config.stash[metadata_key]["project"] = "Demo"
+    config.stash[metadata_key]["tags"] = ["pytest", "selenium", "python"]
+    config.stash[metadata_key]["browser"] = config.getoption("--browser")
 
-#     if session.config.getoption("--host") in ("saucelabs", "saucelabs-tunnel", "browserstack"):
+    if config.getoption("--host") in ("saucelabs", "saucelabs-tunnel", "browserstack"):
 
-#         if session.config.getoption("--host") in ("saucelabs", "saucelabs-tunnel"):
-#             session.config._metadata["host"] = "saucelabs"
+        if config.getoption("--host") in ("saucelabs", "saucelabs-tunnel"):
+            config.stash[metadata_key]["host"] = "saucelabs"
 
-#         else:
-#             session.config._metadata["host"] = "browserstack"
+        else:
+            config.stash[metadata_key]["host"] = "browserstack"
 
-#         session.config._metadata["platform"] = session.config.getoption(
-#             "--platform")
-#         session.config._metadata["browser version"] = session.config.getoption(
-#             "--browserversion")
+        config.stash[metadata_key]["platform"] = config.getoption(
+            "--platform")
+        config.stash[metadata_key]["browser version"] = config.getoption(
+            "--browserversion")
