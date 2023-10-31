@@ -3,10 +3,9 @@ import os
 import config as setting
 from dataclasses import dataclass
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as ChromiumService
+from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from webdriver_manager.core.utils import ChromeType
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 from drivers.base_driver import BaseRunner
@@ -40,12 +39,9 @@ class ChromeRunner(BaseRunner):
     def start_driver(self) -> webdriver:
         """Starts Chrome Driver and returns driver instance."""
         driver_ = webdriver.Chrome(
-            service=ChromiumService(
-                ChromeDriverManager(
-                    chrome_type=ChromeType.CHROMIUM,
-                    version=setting.BROWSER_VERSION).install()
-            ),
-            options=self.capabilities)
+            service=ChromeService(
+                ChromeDriverManager().install(),), options=self.capabilities
+            )
         LOGGER.info(f"... testing> {self.testname}")
         return driver_
 

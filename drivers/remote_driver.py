@@ -3,6 +3,7 @@ import os
 from selenium import webdriver
 from selenium.webdriver.remote.webdriver import WebDriver
 from drivers.base_driver import BaseRunner
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 import config as setting
 from dataclasses import dataclass
 
@@ -80,6 +81,7 @@ class SauceRunner(BaseRunner):
         driver_.maximize_window()
         return driver_
 
+
 @dataclass
 class DockerRunner(BaseRunner):
 
@@ -89,17 +91,25 @@ class DockerRunner(BaseRunner):
     @property
     def capabilities(self) -> dict:
         """Gets config from CLI and conf.py"""
-        LOGGER.info(">> Browser: Chrome")
+        LOGGER.info(f">> Browser: {setting.BROWSER}")
 
-        options = webdriver.ChromeOptions()
-        if self.headless is True:
-            LOGGER.info(
-                "...Headless mode enabled (chrome)")
-            options.add_argument("--headless")
-        options.add_argument("start-maximized")
-        options.add_argument("--disable-extensions")
-        options.add_argument("--log-level=3")
-        return options
+        if setting.BROWSER == "chrome":
+            options = webdriver.ChromeOptions()
+            if self.headless is True:
+                LOGGER.info(
+                    "...Headless mode enabled (chrome)")
+                options.add_argument("--headless")
+            options.add_argument("start-maximized")
+            options.add_argument("--disable-extensions")
+            options.add_argument("--log-level=3")
+            return options
+
+        elif setting.BROWSER == "firefox":
+            options = FirefoxOptions()
+            if self.headless is True:
+                LOGGER.info("...Headless mode enabled (firefox)")
+                options.headless = True
+            return options
 
     def start_driver(self) -> webdriver:
         """Connects to remote driver (docker) and returns driver instance."""

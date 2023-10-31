@@ -196,27 +196,21 @@ def pytest_configure(config):
         config.option.self_contained_html = True
 
 
-@pytest.hookimpl(tryfirst=True)
-def pytest_sessionfinish(session, exitstatus):  # pylint: disable=unused-argument
+def pytest_configure(config):  # pylint: disable=unused-argument
     """Adds metadata to the HTML report."""
-    session.config._metadata["project"] = "Demo"
-<<<<<<< HEAD
-    session.config._metadata["person running"] = os.getlogin()
-=======
-    # session.config._metadata["person running"] = os.getlogin()
->>>>>>> 64b6d202c31ed1e1e9699e2354d4fba24fac80ec
-    session.config._metadata["tags"] = ["pytest", "selenium", "python"]
-    session.config._metadata["browser"] = session.config.getoption("--browser")
+    config._metadata["project"] = "Demo"
+    config._metadata["tags"] = ["pytest", "selenium", "python"]
+    config._metadata["browser"] = config.getoption("--browser")
 
-    if session.config.getoption("--host") in ("saucelabs", "saucelabs-tunnel", "browserstack"):
+    if config.getoption("--host") in ("saucelabs", "saucelabs-tunnel", "browserstack"):
 
-        if session.config.getoption("--host") in ("saucelabs", "saucelabs-tunnel"):
-            session.config._metadata["host"] = "saucelabs"
+        if config.getoption("--host") in ("saucelabs", "saucelabs-tunnel"):
+            config._metadata["host"] = "saucelabs"
 
         else:
-            session.config._metadata["host"] = "browserstack"
+            config._metadata["host"] = "browserstack"
 
-        session.config._metadata["platform"] = session.config.getoption(
+        config._metadata["platform"] = config.getoption(
             "--platform")
-        session.config._metadata["browser version"] = session.config.getoption(
+        config._metadata["browser version"] = config.getoption(
             "--browserversion")

@@ -1,0 +1,37 @@
+[tool.poetry]
+name = "python-selenium4-pytest"
+version = "0.1.0"
+description = "Pytest framework with Selenium 4 for web test automation"
+authors = ["Kevin Lao <f00dog.x300@gmail.com>"]
+license = "MIT License"
+readme = "README.md"
+packages = [{include = "python_selenium4_pytest"}]
+
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pytest = "7.4.0"
+pytest-xdist = "2.5.0"
+pytest-html = "3.2.0"
+selenium = "^4.14.0"
+webdriver-manager = "^4.0.1"
+pytest-metadata = "2.0.4"
+
+
+[tool.poetry.group.dev.dependencies]
+pyclean = "^2.7.3"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.poetry.scripts]
+sauce-windows-chrome = "pytest --host=saucelabs --browserversion=latest --platform='Windows' --os-version=10 --browser=chrome"
+sauce-windows-firefox = "pytest --host=saucelabs --browserversion=latest --platform='Windows' --os-version=10 --browser=firefox"
+bs-windows-chrome = "pytest --host=browserstack --browserversion=latest --platform='Windows' --os-version=10 --browser=chrome"
+bs-windows-firefox = "pytest --host=browserstack --browserversion=latest --platform='Windows' --os-version=10 --browser=chrome"
+local-test-chrome = "pytest --host=localhost --browser=chrome"
+local-test-firefox = "pytest --host=localhost --browser=firefox"
+docker-test-chrome = "pytest --host=docker --browser=chrome --headless=False"
